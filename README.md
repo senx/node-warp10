@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/%40senx%2Fwarp10.svg)](https://badge.fury.io/js/%40senx%2Fwarp10) 
+
 # Warp&nbsp;10™ Node lib
 
 NodeJS library that helps to interact with Warp&nbsp;10™  
