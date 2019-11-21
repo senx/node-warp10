@@ -142,14 +142,14 @@ export class Warp10 {
 
   /**
    *
-   * @param writeToken
+   * @param deleteToken
    * @param className
    * @param labels
    * @param start
    * @param end
    * @param deleteAll
    */
-  delete(writeToken: string, className: string, labels: object, start: string, end: string, deleteAll = false) {
+  delete(deleteToken: string, className: string, labels: object, start: string, end: string, deleteAll = false) {
     const params = new URLSearchParams([]);
     params.set('selector', encodeURIComponent(className) + this.formatLabels(labels));
 

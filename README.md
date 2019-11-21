@@ -27,6 +27,7 @@ import {Warp10} from "@senx/warp10";
 import * as moment from 'moment';
 
 const writeToken = 'xxxxxx';
+const deleteToken = 'xxxxxx';
 const readToken = 'xxxx';
 const w10 = new Warp10('https://warp.senx.io');
 
@@ -55,10 +56,10 @@ const test = async () => {
   console.log(await w10.fetch(readToken, '~.*', {}, '2019-11-21T12:34:43.388409Z', 86400000000 * 5));
 
   // delete data between 2 dates
-  console.log(await w10.delete(writeToken, '~io.warp10.test*', {key: 'value'}, '2019-11-11T12:34:43.388409Z', '2019-11-21T12:34:43.388409Z'));
+  console.log(await w10.delete(deleteToken, '~io.warp10.test*', {key: 'value'}, '2019-11-11T12:34:43.388409Z', '2019-11-21T12:34:43.388409Z'));
   
   // delete all
-  console.log(await w10.delete(writeToken, '~io.warp10.test*', {key: 'value'}, '', '', true));
+  console.log(await w10.delete(deleteToken, '~io.warp10.test*', {key: 'value'}, '', '', true));
 };
 
 test().then(() => {
