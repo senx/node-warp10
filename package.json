@@ -13,7 +13,7 @@
     "Geo Times Series",
     "Times Series"
   ],
-  "description": "Warp 10™ nodeJS library",
+  "description": "Warp 10™ NodeJS library",
   "repository": {
     "type": "git",
     "url": "https://github.com/senx/node-warp10.git"
