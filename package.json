@@ -1,0 +1,45 @@
+{
+  "name": "@senx/warp10",
+  "version": "1.0.0",
+  "private": false,
+  "keywords": [
+    "web",
+    "dataviz",
+    "web components",
+    "time series",
+    "warp10",
+    "Warp 10",
+    "WarpScript",
+    "Geo Times Series",
+    "Times Series"
+  ],
+  "description": "Warp 10™ nodeJS library",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/senx/node-warp10.git"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/senx/node-warp10/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "homepage": "https://www.warp10.io",
+  "author": "SenX <contact@senx.io>",
+  "files": [
+    "*"
+  ],
+  "devDependencies": {
+    "@types/got": "^9.6.9",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^12.12.11",
+    "ts-node": "^8.5.2",
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "got": "^9.6.0",
+    "moment": "^2.24.0"
+  }
+}
