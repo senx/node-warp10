@@ -35,12 +35,8 @@ export class Warp10 {
     return `{${Object.keys(labels).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
   }
 
-  private static formatValues(value: (number | string | boolean)[] | number | string | boolean) {
-    if (Array.isArray(value)) {
-      return `[ ${value.join(' ')} ]`;
-    } else {
-      return value;
-    }
+  private static formatValues(value: number | string | boolean) {
+    return (typeof value === 'string') ? encodeURIComponent(value) : value;
   }
 
   /**
@@ -112,21 +108,25 @@ export class Warp10 {
    * @param writeToken
    * @param datapoints
    */
-  update(writeToken: string, datapoints: {
+  update(writeToken: string, datapoints: ({
     timestamp?: number,
     lat?: number
     lng?: number
     elev?: number
     className: string;
-    value: (number | string | boolean)[] | number | string | boolean;
+    value: number | string | boolean;
     labels: object
-  }[]) {
+  } | string)[]) {
     const payload = datapoints.map(d => {
       let pos = '';
-      if (d.lat && d.lng) {
-        pos = `${d.lat}:${d.lng}`;
+      if (typeof d === 'string') {
+        return d;
+      } else {
+        if (d.lat && d.lng) {
+          pos = `${d.lat}:${d.lng}`;
+        }
+        return `${d.timestamp || moment.utc().valueOf() * 1000}/${pos}/${d.elev || ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
       }
-      return `${d.timestamp || moment.utc().valueOf() * 1000}/${pos}/${d.elev || ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
     });
     return new Promise<{ response: string, count: number }>((resolve, reject) => {
       got.post(`${this.url.replace(/^\/+/, '')}/api/v0/update`, {
@@ -167,7 +167,7 @@ export class Warp10 {
     }
     return new Promise<{ result: string }>((resolve, reject) => {
       got.get(`${this.url.replace(/^\/+/, '')}/api/v0/delete?${params.toString()}`, {
-        headers: {'Content-Type': 'text/plain', 'x-warp10-token': writeToken}
+        headers: {'Content-Type': 'text/plain', 'x-warp10-token': deleteToken}
       }).then(response => {
         console.log(response.body, response.headers);
         resolve({result: response.body});
