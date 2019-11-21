@@ -22,13 +22,17 @@ import * as moment from "moment";
 export class Warp10 {
 
   private url: string;
+  private options: got.GotBodyOptions<string> = {};
+  private timeoutOptions: got.TimeoutOptions = {};
 
   /**
-   *
-   * @param url
+   * Create new Warp 10™ connector.
+   * @param url Warp 10 endpoint, without "/api/v0" at the end.
    */
-  constructor(url: string) {
+  constructor(url: string, requestTimeout?: number, connectTimeout?: number, retry?: number) {
     this.url = url;
+    this.setTimeout(requestTimeout, connectTimeout, retry);
+    this.options.headers = { 'Content-Type': 'text/plain; charset=UTF-8' };
   }
 
   private formatLabels(labels: any) {
@@ -40,15 +44,29 @@ export class Warp10 {
   }
 
   /**
+   * Exposed for unit tests and dynamic adjustment on embedded systems
+   * @param requestTimeout from socket opened to answer request. Default is no limit.
+   * @param connectTimeout lookup + connect phase + https handshake. Default is 10 seconds. 
+   * @param retry number of retry to do the request. Default is 1.
+   */
+  setTimeout(requestTimeout?: number, connectTimeout?: number, retry?: number) {
+    this.timeoutOptions.connect = connectTimeout || 10000;
+    this.timeoutOptions.secureConnect = connectTimeout || 10000;
+    this.timeoutOptions.lookup = connectTimeout || 10000;
+    this.timeoutOptions.socket = connectTimeout || 10000;
+    this.timeoutOptions.response = requestTimeout || 0;
+    this.options.timeout = this.timeoutOptions;
+    this.options.retry = retry || 1;
+  }
+
+  /**
    *
    * @param warpscript
    */
   exec(warpscript: string) {
     return new Promise<{ result: any[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
-      got.post(`${this.url.replace(/^\/+/, '')}/api/v0/exec`, {
-        body: warpscript,
-        headers: { 'Content-Type': 'text/plain; charset=UTF-8' }
-      }).then(response => {
+      this.options.body = warpscript;
+      got.post(`${this.url.replace(/^\/+/, '')}/api/v0/exec`, this.options).then(response => {
         resolve({
           result: JSON.parse(response.body),
           meta: {

@@ -18,21 +18,43 @@ import { Warp10 } from "../lib/warp10";
 import { assert } from 'chai';  // Using Assert style
 import { expect } from 'chai';  // Using Expect style
 import { should } from 'chai';  // Using Should style
-
+import { performance } from 'perf_hooks';
 
 const warp10url: string = "http://localhost:8080"
 
-let warp:Warp10 = new Warp10(warp10url);
+let warp: Warp10 = new Warp10(warp10url);
 
-let unreachablewarp:Warp10 = new Warp10("http://donotexist.donotexist")
+let unreachablewarp: Warp10 = new Warp10("http://donotexist.donotexist")
+
+console.log("Starting unit tests...");
+
+warp.exec("'ca%25'").then(answer => { expect(answer.result[0]).to.equal('ca%') }, err => { console.log(err) })
+
+warp.exec("'éè™'").then(answer => { expect(answer.result[0]).to.equal('éè™') }, err => { console.log(err) })
+
+warp.exec("2 2 +").then(answer => { expect(answer.result[0]).to.equal(4) }, err => { console.log(err) })
+
+warp.exec("").then(answer => { assert.typeOf(answer.result, "Array", "stack should be an array") }, err => { console.log(err) })
+
+warp.exec("{}").then(answer => { assert.typeOf(answer.result[0], "Object") }, err => { console.log(err) })
+
+//unreachablewarp.exec("2 2 +").then(answer => { assert(false, "this unreachable endpoint should not be a success") }, err => { console.log(err) })
 
 
-warp.exec("'ca%25'").then(answer => {expect(answer.result[0]).to.equal('ca%')},err => { console.log(err)})
 
-warp.exec("'éè™'").then(answer => {expect(answer.result[0]).to.equal('éè™')},err => { console.log(err)})
+const timeoutTests = async () => {
 
-warp.exec("2 2 +").then(answer => {expect(answer.result[0]).to.equal(4)},err => { console.log(err)})
+  unreachablewarp.setTimeout(20000, 1000);
 
-warp.exec("").then(answer => {assert.typeOf(answer.result,"Array","stack should be an array")},err => { console.log(err)})
+  let starttime: number = performance.now();
+  await unreachablewarp.exec("2 2 +").then(
+    answer => { assert(false, "this unreachable endpoint should not be a success") },
+    err => { expect(err.code, "error code when host unreachable").eq("ENOTFOUND"); }
+  )
+  let exectime: number = performance.now() - starttime;
 
+  expect(exectime, "timeout set to 1s, execution time should be under 2s.").lt(2000)
 
+}
+
+timeoutTests();
