@@ -47,7 +47,8 @@ export class Warp10 {
     return new Promise<{ result: any[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
       got.post(`${this.url.replace(/^\/+/, '')}/api/v0/exec`, {
         body: warpscript,
-      },).then(response => {
+        headers: { 'Content-Type': 'text/plain; charset=UTF-8' }
+      }).then(response => {
         resolve({
           result: JSON.parse(response.body),
           meta: {
