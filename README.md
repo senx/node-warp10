@@ -42,7 +42,8 @@ const test = async () => {
   // insert data points
   console.log(await w10.update(writeToken, [
     {timestamp: moment.utc().valueOf() * 1000, className: 'io.warp10.test', labels: {key: 'value'}, value: 54},
-    {className: 'io.warp10.test', labels: {key: 'value'}, value: [5, 10, 15]}
+    '1380475081000000// io.warp10.test{key=value} T',
+    '1566893344654882/48.81:-4.147/124 io.warp10.test{key=value} [8.2 151 152 1568189745655509/40.6:-74/14 ]',
   ]));
 
   // write meta
