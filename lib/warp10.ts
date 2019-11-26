@@ -122,9 +122,7 @@ export class Warp10 {
       params.set('timespan', '' + stop);
     }
     return new Promise<{ result: string[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
-      got.get(`${this.url}/api/v0/fetch?${params.toString()}`, {
-        headers: { 'Content-Type': 'text/plain', 'x-warp10-token': readToken }
-      }).then(response => {
+      got.get(`${this.url}/api/v0/fetch?${params.toString()}`, this.getOptions('', readToken)).then(response => {
         resolve({
           result: response.body.split('\n'),
           meta: {
