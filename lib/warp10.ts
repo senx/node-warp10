@@ -54,7 +54,7 @@ export class Warp10 {
     this.timeoutOptions.secureConnect = connectTimeout || 10000;
     this.timeoutOptions.lookup = connectTimeout || 10000;
     this.timeoutOptions.socket = connectTimeout || 10000;
-    this.timeoutOptions.response = requestTimeout || 0;
+    this.timeoutOptions.response = requestTimeout || undefined;
     this.options.timeout = this.timeoutOptions;
     this.options.retry = retry || 1;
   }
