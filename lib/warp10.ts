@@ -15,6 +15,7 @@
  */
 import * as got from "got";
 import * as moment from "moment";
+import { write } from "fs";
 
 /**
  *
@@ -22,13 +23,18 @@ import * as moment from "moment";
 export class Warp10 {
 
   private url: string;
+  private options: got.GotBodyOptions<string> = {};
+  private timeoutOptions: got.TimeoutOptions = {};
 
   /**
-   *
-   * @param url
+   * Create new Warp 10™ connector.
+   * @param url Warp 10 endpoint, without "/api/v0" at the end.
    */
-  constructor(url: string) {
-    this.url = url;
+  constructor(url: string, requestTimeout?: number, connectTimeout?: number, retry?: number) {
+    // remove trailing slash if any
+    this.url = url.replace(/\/+$/, '');
+    this.setTimeout(requestTimeout, connectTimeout, retry);
+    this.options.headers = { 'Content-Type': 'text/plain; charset=UTF-8', 'X-Warp10-Token': '' };
   }
 
   private formatLabels(labels: any) {
@@ -40,14 +46,45 @@ export class Warp10 {
   }
 
   /**
-   *
+   * Exposed for unit tests and dynamic adjustment on embedded systems
+   * @param requestTimeout from socket opened to answer request. Default is no limit.
+   * @param connectTimeout lookup + connect phase + https handshake. Default is 10 seconds. 
+   * @param retry number of retry to do the request. Default is 1.
+   */
+  setTimeout(requestTimeout?: number, connectTimeout?: number, retry?: number) {
+    this.timeoutOptions.connect = connectTimeout || 10000;
+    this.timeoutOptions.secureConnect = connectTimeout || 10000;
+    this.timeoutOptions.lookup = connectTimeout || 10000;
+    this.timeoutOptions.socket = connectTimeout || 10000;
+    this.timeoutOptions.response = requestTimeout || undefined;
+    this.options.timeout = this.timeoutOptions;
+    this.options.retry = retry || 1;
+  }
+
+  /**
+   * Build got request options from defined options
+   * @param body the got request payload
+   * @param warpToken the X-Warp10-Token, if any
+   */
+  private getOptions(body: string, warpToken?: string): got.GotBodyOptions<string> {
+    let opts: got.GotBodyOptions<string> = {};
+    opts.retry = this.options.retry;
+    opts.timeout = this.timeoutOptions;
+    opts.headers = {
+      'Content-Type': 'text/plain; charset=UTF-8',
+      'X-Warp10-Token': warpToken || ''
+    };
+    opts.body = body;
+    return opts;
+  }
+
+  /**
+   * 
    * @param warpscript
    */
   exec(warpscript: string) {
     return new Promise<{ result: any[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
-      got.post(`${this.url.replace(/^\/+/, '')}/api/v0/exec`, {
-        body: warpscript,
-      },).then(response => {
+      got.post(`${this.url}/api/v0/exec`, this.getOptions(warpscript)).then(response => {
         resolve({
           result: JSON.parse(response.body),
           meta: {
@@ -56,9 +93,7 @@ export class Warp10 {
             fetched: parseInt((response.headers['x-warp10-fetched'] || ['0'])[0], 10)
           }
         });
-      }).catch(error => {
-        reject(!!error.response ? error.response.body : error);
-      });
+      }).catch(error => reject(error));
     });
   }
 
@@ -86,9 +121,7 @@ export class Warp10 {
       params.set('timespan', '' + stop);
     }
     return new Promise<{ result: string[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
-      got.get(`${this.url.replace(/^\/+/, '')}/api/v0/fetch?${params.toString()}`, {
-        headers: {'Content-Type': 'text/plain', 'x-warp10-token': readToken}
-      }).then(response => {
+      got.get(`${this.url}/api/v0/fetch?${params.toString()}`, this.getOptions('', readToken)).then(response => {
         resolve({
           result: response.body.split('\n'),
           meta: {
@@ -97,9 +130,7 @@ export class Warp10 {
             fetched: parseInt((response.headers['x-warp10-fetched'] || ['0'])[0], 10)
           }
         });
-      }).catch(error => {
-        reject(!!error.response ? error.response.body : error);
-      });
+      }).catch(error => reject(error));
     });
   }
 
@@ -129,14 +160,9 @@ export class Warp10 {
       }
     });
     return new Promise<{ response: string, count: number }>((resolve, reject) => {
-      got.post(`${this.url.replace(/^\/+/, '')}/api/v0/update`, {
-        body: payload.join('\n'),
-        headers: {'Content-Type': 'text/plain', 'x-warp10-token': writeToken}
-      },).then(response => {
-        resolve({response: response.body, count: payload.length});
-      }).catch(error => {
-        reject(!!error.response ? error.response.body : error);
-      });
+      got.post(`${this.url}/api/v0/update`, this.getOptions(payload.join('\n'), writeToken))
+      .then(response => resolve({ response: response.body, count: payload.length }))
+      .catch(error => reject(error));
     });
   }
 
@@ -166,14 +192,9 @@ export class Warp10 {
       params.set('end', (endM.valueOf() * 1000) + '');
     }
     return new Promise<{ result: string }>((resolve, reject) => {
-      got.get(`${this.url.replace(/^\/+/, '')}/api/v0/delete?${params.toString()}`, {
-        headers: {'Content-Type': 'text/plain', 'x-warp10-token': deleteToken}
-      }).then(response => {
-        console.log(response.body, response.headers);
-        resolve({result: response.body});
-      }).catch(error => {
-        reject(!!error.response ? error.response.body : error);
-      });
+      got.get(`${this.url}/api/v0/delete?${params.toString()}`,
+        this.getOptions('', deleteToken)).then(response => resolve({ result: response.body }))
+        .catch(error => reject(error));
     });
   }
 
@@ -185,14 +206,10 @@ export class Warp10 {
   meta(writeToken: string, meta: { className: string, labels: object, attributes: object }[]) {
     const payload = meta.map(m => encodeURIComponent(m.className) + this.formatLabels(m.labels) + this.formatLabels(m.attributes));
     return new Promise<{ response: string, count: number }>((resolve, reject) => {
-      got.post(`${this.url.replace(/^\/+/, '')}/api/v0/meta`, {
-        body: payload.join('\n'),
-        headers: {'Content-Type': 'text/plain', 'x-warp10-token': writeToken}
-      },).then(response => {
-        resolve({response: response.body, count: payload.length});
-      }).catch(error => {
-        reject(!!error.response ? error.response.body : error);
-      });
+      got.post(`${this.url}/api/v0/meta`,
+        this.getOptions(payload.join('\n'), writeToken))
+        .then(response => resolve({ response: response.body, count: payload.length }))
+        .catch(error => reject(error));
     });
   }
 }
