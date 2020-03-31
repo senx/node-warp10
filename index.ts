@@ -14,3 +14,4 @@
  *  limitations under the License.
  */
 export {Warp10} from './lib/warp10';
+export {DataPoint} from './lib/DataPoint';
