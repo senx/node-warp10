@@ -1,11 +1,11 @@
 /*
- *  Copyright 2019 SenX S.A.S.
+ * Copyright 2020 SenX S.A.S.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 import * as got from "got";
 import * as moment from "moment";
-import { write } from "fs";
+import {DataPoint} from "./DataPoint";
 
 /**
  *
@@ -28,13 +28,17 @@ export class Warp10 {
 
   /**
    * Create new Warp 10™ connector.
+   *
    * @param url Warp 10 endpoint, without "/api/v0" at the end.
+   * @param requestTimeout
+   * @param connectTimeout
+   * @param retry
    */
   constructor(url: string, requestTimeout?: number, connectTimeout?: number, retry?: number) {
     // remove trailing slash if any
     this.url = url.replace(/\/+$/, '');
     this.setTimeout(requestTimeout, connectTimeout, retry);
-    this.options.headers = { 'Content-Type': 'text/plain; charset=UTF-8', 'X-Warp10-Token': '' };
+    this.options.headers = {'Content-Type': 'text/plain; charset=UTF-8', 'X-Warp10-Token': ''};
   }
 
   private formatLabels(labels: any) {
@@ -42,13 +46,13 @@ export class Warp10 {
   }
 
   private static formatValues(value: number | string | boolean) {
-    return (typeof value === 'string') ? encodeURIComponent(value) : value;
+    return (typeof value === 'string') ? `"${encodeURIComponent(value)}"` : value;
   }
 
   /**
    * Exposed for unit tests and dynamic adjustment on embedded systems
    * @param requestTimeout from socket opened to answer request. Default is no limit.
-   * @param connectTimeout lookup + connect phase + https handshake. Default is 10 seconds. 
+   * @param connectTimeout lookup + connect phase + https handshake. Default is 10 seconds.
    * @param retry number of retry to do the request. Default is 1.
    */
   setTimeout(requestTimeout?: number, connectTimeout?: number, retry?: number) {
@@ -79,7 +83,7 @@ export class Warp10 {
   }
 
   /**
-   * 
+   *
    * @param warpscript
    */
   exec(warpscript: string) {
@@ -139,15 +143,7 @@ export class Warp10 {
    * @param writeToken
    * @param datapoints
    */
-  update(writeToken: string, datapoints: ({
-    timestamp?: number,
-    lat?: number
-    lng?: number
-    elev?: number
-    className: string;
-    value: number | string | boolean;
-    labels: object
-  } | string)[]) {
+  update(writeToken: string, datapoints: (DataPoint | string)[]) {
     const payload = datapoints.map(d => {
       let pos = '';
       if (typeof d === 'string') {
@@ -161,8 +157,8 @@ export class Warp10 {
     });
     return new Promise<{ response: string, count: number }>((resolve, reject) => {
       got.post(`${this.url}/api/v0/update`, this.getOptions(payload.join('\n'), writeToken))
-      .then(response => resolve({ response: response.body, count: payload.length }))
-      .catch(error => reject(error));
+        .then(response => resolve({response: response.body, count: payload.length}))
+        .catch(error => reject(error));
     });
   }
 
@@ -193,7 +189,7 @@ export class Warp10 {
     }
     return new Promise<{ result: string }>((resolve, reject) => {
       got.get(`${this.url}/api/v0/delete?${params.toString()}`,
-        this.getOptions('', deleteToken)).then(response => resolve({ result: response.body }))
+        this.getOptions('', deleteToken)).then(response => resolve({result: response.body}))
         .catch(error => reject(error));
     });
   }
@@ -208,7 +204,7 @@ export class Warp10 {
     return new Promise<{ response: string, count: number }>((resolve, reject) => {
       got.post(`${this.url}/api/v0/meta`,
         this.getOptions(payload.join('\n'), writeToken))
-        .then(response => resolve({ response: response.body, count: payload.length }))
+        .then(response => resolve({response: response.body, count: payload.length}))
         .catch(error => reject(error));
     });
   }
