@@ -29,7 +29,7 @@
   "homepage": "https://www.warp10.io",
   "author": "SenX <contact@senx.io>",
   "files": [
-    "*"
+    "dist"
   ],
   "devDependencies": {
     "@types/chai": "^4.2.5",
