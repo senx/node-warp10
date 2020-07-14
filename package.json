@@ -1,6 +1,6 @@
 {
   "name": "@senx/warp10",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "private": false,
   "keywords": [
     "web",
@@ -22,15 +22,12 @@
   "bugs": {
     "url": "https://github.com/senx/node-warp10/issues"
   },
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
     "build": "tsc && ts-node tests/unitTest1.ts"
   },
   "homepage": "https://www.warp10.io",
   "author": "SenX <contact@senx.io>",
-  "files": [
-    "dist"
-  ],
   "devDependencies": {
     "@types/chai": "^4.2.5",
     "@types/got": "^9.6.9",
