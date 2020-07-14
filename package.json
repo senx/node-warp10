@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/senx/node-warp10/issues"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc && ts-node tests/unitTest1.ts"
   },
