@@ -19,7 +19,7 @@ import {assert, expect} from 'chai'; // Using Assert style // Using Expect style
 import {performance} from 'perf_hooks';
 import * as got from "got";
 
-const warp10url: string = "http://localhost:8080";
+const warp10url: string = "http://localhost:8180";
 
 let warp: Warp10 = new Warp10(warp10url);
 
