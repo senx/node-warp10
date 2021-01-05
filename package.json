@@ -1,6 +1,6 @@
 {
   "name": "@senx/warp10",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "private": false,
   "keywords": [
     "web",
@@ -30,9 +30,6 @@
   },
   "homepage": "https://www.warp10.io",
   "author": "SenX <contact@senx.io>",
-  "files": [
-    "dist"
-  ],
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.2.0",
