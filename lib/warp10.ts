@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 SenX S.A.S.
+ * Copyright 2020-2021 SenX S.A.S.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,9 +13,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-import * as got from "got";
-import * as moment from "moment";
-import {DataPoint} from "./DataPoint";
+'use strict'
+import {DataPoint} from './DataPoint';
+import got, {Options} from 'got';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import {URLSearchParams} from "url";
+
+dayjs.extend(utc)
 
 /**
  *
@@ -23,13 +28,13 @@ import {DataPoint} from "./DataPoint";
 export class Warp10 {
 
   private url: string;
-  private options: got.GotBodyOptions<string> = {};
-  private timeoutOptions: got.TimeoutOptions = {};
+  private options: Options = {};
+  private timeoutOptions: any = {};
 
   /**
    * Create new Warp 10™ connector.
    *
-   * @param url Warp 10 endpoint, without "/api/v0" at the end.
+   * @param url Warp 10 endpoint, without '/api/v0' at the end.
    * @param requestTimeout
    * @param connectTimeout
    * @param retry
@@ -46,7 +51,7 @@ export class Warp10 {
   }
 
   private static formatValues(value: number | string | boolean) {
-    return (typeof value === 'string') ? `"${encodeURIComponent(value)}"` : value;
+    return (typeof value === 'string') ? `'${encodeURIComponent(value)}'` : value;
   }
 
   /**
@@ -70,16 +75,16 @@ export class Warp10 {
    * @param body the got request payload
    * @param warpToken the X-Warp10-Token, if any
    */
-  private getOptions(body: string, warpToken?: string): got.GotBodyOptions<string> {
-    let opts: got.GotBodyOptions<string> = {};
-    opts.retry = this.options.retry;
-    opts.timeout = this.timeoutOptions;
-    opts.headers = {
-      'Content-Type': 'text/plain; charset=UTF-8',
-      'X-Warp10-Token': warpToken || ''
-    };
-    opts.body = body;
-    return opts;
+  private getOptions(body?: string, warpToken?: string): Options {
+    return {
+      retry: this.options.retry,
+      timeout: this.timeoutOptions,
+      headers: {
+        'Content-Type': 'text/plain; charset=UTF-8',
+        'X-Warp10-Token': warpToken || ''
+      },
+      body
+    }
   }
 
   /**
@@ -87,8 +92,9 @@ export class Warp10 {
    * @param warpscript
    */
   exec(warpscript: string) {
-    return new Promise<{ result: any[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
-      got.post(`${this.url}/api/v0/exec`, this.getOptions(warpscript)).then(response => {
+    return new Promise<{ result: any[], meta: { elapsed: number, ops: number, fetched: number } }>(async (resolve, reject) => {
+      try {
+        const response = await got.post(`${this.url}/api/v0/exec`, this.getOptions(warpscript)) as any;
         resolve({
           result: JSON.parse(response.body),
           meta: {
@@ -97,7 +103,9 @@ export class Warp10 {
             fetched: parseInt((response.headers['x-warp10-fetched'] || ['0'])[0], 10)
           }
         });
-      }).catch(error => reject(error));
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -124,8 +132,9 @@ export class Warp10 {
       params.set('now', start);
       params.set('timespan', '' + stop);
     }
-    return new Promise<{ result: string[], meta: { elapsed: number, ops: number, fetched: number } }>((resolve, reject) => {
-      got.get(`${this.url}/api/v0/fetch?${params.toString()}`, this.getOptions('', readToken)).then(response => {
+    return new Promise<{ result: string[], meta: { elapsed: number, ops: number, fetched: number } }>(async (resolve, reject) => {
+      try {
+        const response = await got.get(`${this.url}/api/v0/fetch?${params.toString()}`, this.getOptions(undefined, readToken)) as any;
         resolve({
           result: response.body.split('\n'),
           meta: {
@@ -134,7 +143,9 @@ export class Warp10 {
             fetched: parseInt((response.headers['x-warp10-fetched'] || ['0'])[0], 10)
           }
         });
-      }).catch(error => reject(error));
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -152,13 +163,16 @@ export class Warp10 {
         if (d.lat && d.lng) {
           pos = `${d.lat}:${d.lng}`;
         }
-        return `${d.timestamp || moment.utc().valueOf() * 1000}/${pos}/${d.elev || ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
+        return `${d.timestamp || dayjs.utc().valueOf() * 1000}/${pos}/${d.elev || ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
       }
     });
-    return new Promise<{ response: string, count: number }>((resolve, reject) => {
-      got.post(`${this.url}/api/v0/update`, this.getOptions(payload.join('\n'), writeToken))
-        .then(response => resolve({response: response.body, count: payload.length}))
-        .catch(error => reject(error));
+    return new Promise<{ response: string, count: number }>(async (resolve, reject) => {
+      try {
+        const response = await got.post(`${this.url}/api/v0/update`, this.getOptions(payload.join('\n'), writeToken)) as any;
+        resolve({response: response.body, count: payload.length});
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -174,23 +188,25 @@ export class Warp10 {
   delete(deleteToken: string, className: string, labels: object, start: string, end: string, deleteAll = false) {
     const params = new URLSearchParams([]);
     params.set('selector', encodeURIComponent(className) + this.formatLabels(labels));
-
     if (deleteAll) {
       params.set('deleteall', '' + true);
     } else {
-      let startM = moment.utc(start);
-      let endM = moment.utc(end);
+      let startM = dayjs.utc(start);
+      let endM = dayjs.utc(end);
       if (startM.isAfter(endM)) {
-        startM = moment.utc(end);
-        endM = moment.utc(start);
+        startM = dayjs.utc(end);
+        endM = dayjs.utc(start);
       }
       params.set('start', (startM.valueOf() * 1000) + '');
       params.set('end', (endM.valueOf() * 1000) + '');
     }
-    return new Promise<{ result: string }>((resolve, reject) => {
-      got.get(`${this.url}/api/v0/delete?${params.toString()}`,
-        this.getOptions('', deleteToken)).then(response => resolve({result: response.body}))
-        .catch(error => reject(error));
+    return new Promise<{ result: string }>(async (resolve, reject) => {
+      try {
+        const response = await got.get(`${this.url}/api/v0/delete?${params.toString()}`, this.getOptions(undefined, deleteToken)) as any;
+        resolve({result: response.body});
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -201,11 +217,13 @@ export class Warp10 {
    */
   meta(writeToken: string, meta: { className: string, labels: object, attributes: object }[]) {
     const payload = meta.map(m => encodeURIComponent(m.className) + this.formatLabels(m.labels) + this.formatLabels(m.attributes));
-    return new Promise<{ response: string, count: number }>((resolve, reject) => {
-      got.post(`${this.url}/api/v0/meta`,
-        this.getOptions(payload.join('\n'), writeToken))
-        .then(response => resolve({response: response.body, count: payload.length}))
-        .catch(error => reject(error));
+    return new Promise<{ response: string, count: number }>(async (resolve, reject) => {
+      try {
+        const response = await got.post(`${this.url}/api/v0/meta`, this.getOptions(payload.join('\n'), writeToken)) as any;
+        resolve({response: response.body, count: payload.length});
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 }
