@@ -15,10 +15,11 @@
  */
 'use strict'
 import {DataPoint} from './DataPoint';
-import got, {Options} from 'got';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import {URLSearchParams} from "url";
+import {URL, URLSearchParams} from "url";
+import https, {RequestOptions as httpsRequestOpts} from "https";
+import http, {RequestOptions as httpRequestOpts} from "http";
 
 dayjs.extend(utc)
 
@@ -28,23 +29,55 @@ dayjs.extend(utc)
 export class Warp10 {
 
   private url: string;
-  private options: Options = {};
-  private timeoutOptions: any = {};
+  private options: any = {};
+  private timeoutOptions = 0;
+  private client: any;
+  private endpoint: URL;
 
   /**
    * Create new Warp 10™ connector.
    *
-   * @param url Warp 10 endpoint, without '/api/v0' at the end.
-   * @param requestTimeout
-   * @param connectTimeout
-   * @param retry
+   * @param endpoint Warp 10 endpoint, without '/api/v0' at the end.
    */
-  constructor(url: string, requestTimeout?: number, connectTimeout?: number, retry?: number) {
+  constructor(endpoint: string) {
     // remove trailing slash if any
-    this.url = url.replace(/\/+$/, '');
-    this.setTimeout(requestTimeout, connectTimeout, retry);
+    this.url = endpoint.replace(/\/+$/, '');
     this.options.headers = {'Content-Type': 'text/plain; charset=UTF-8', 'X-Warp10-Token': ''};
+    this.client = this.url.startsWith('https') ? https : http;
+    this.endpoint = new URL(endpoint);
   }
+
+  private async send(options: httpsRequestOpts | httpRequestOpts, data?: any): Promise<any> {
+    let body: string = '';
+    return new Promise((resolve, reject) => {
+      const req: any = this.client.request(options, (res: any) => {
+        res.on("data", (chunk: any) => body += chunk);
+        res.on("error", (err: any) => reject(err));
+        res.on("end", () => {
+          try {
+            resolve({body, headers: res.headers});
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+      req.on("error", (err: any) => reject(err));
+      req.on('timeout', (err: any) => {
+        reject(err);
+        req.abort();
+      });
+      req.on('uncaughtException', (err: any) => {
+        req.abort();
+        reject(err);
+      });
+      if (data) {
+        req.write(data);
+      }
+       // end the request to prevent ECONNRESET and socket hung errors
+      req.end(() => {});
+    });
+  }
+
 
   private formatLabels(labels: any) {
     return `{${Object.keys(labels).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
@@ -55,35 +88,22 @@ export class Warp10 {
   }
 
   /**
-   * Exposed for unit tests and dynamic adjustment on embedded systems
-   * @param requestTimeout from socket opened to answer request. Default is no limit.
-   * @param connectTimeout lookup + connect phase + https handshake. Default is 10 seconds.
-   * @param retry number of retry to do the request. Default is 1.
-   */
-  setTimeout(requestTimeout?: number, connectTimeout?: number, retry?: number) {
-    this.timeoutOptions.connect = connectTimeout || 10000;
-    this.timeoutOptions.secureConnect = connectTimeout || 10000;
-    this.timeoutOptions.lookup = connectTimeout || 10000;
-    this.timeoutOptions.socket = connectTimeout || 10000;
-    this.timeoutOptions.response = requestTimeout || undefined;
-    this.options.timeout = this.timeoutOptions;
-    this.options.retry = retry || 1;
-  }
-
-  /**
    * Build got request options from defined options
-   * @param body the got request payload
+   * @param path request path
+   * @param method request method
    * @param warpToken the X-Warp10-Token, if any
    */
-  private getOptions(body?: string, warpToken?: string): Options {
+  private getOptions(path: string, method: string = 'GET', warpToken?: string): any {
     return {
-      retry: this.options.retry,
-      timeout: this.timeoutOptions,
+      hostname: this.endpoint.hostname,
+      port: this.endpoint.port,
+      path,
+      method,
+      bodyTimeout: this.timeoutOptions,
       headers: {
         'Content-Type': 'text/plain; charset=UTF-8',
         'X-Warp10-Token': warpToken || ''
-      },
-      body
+      }
     }
   }
 
@@ -94,13 +114,13 @@ export class Warp10 {
   exec(warpscript: string) {
     return new Promise<{ result: any[], meta: { elapsed: number, ops: number, fetched: number } }>(async (resolve, reject) => {
       try {
-        const response = await got.post(`${this.url}/api/v0/exec`, this.getOptions(warpscript)) as any;
+        const {headers, body} = await this.send(this.getOptions(`/api/v0/exec`, 'POST'), warpscript) as any;
         resolve({
-          result: JSON.parse(response.body),
+          result: JSON.parse(body),
           meta: {
-            elapsed: parseInt((response.headers['x-warp10-elapsed'] || ['0'])[0], 10),
-            ops: parseInt((response.headers['x-warp10-ops'] || ['0'])[0], 10),
-            fetched: parseInt((response.headers['x-warp10-fetched'] || ['0'])[0], 10)
+            elapsed: parseInt((headers['x-warp10-elapsed'] || ['0'])[0], 10),
+            ops: parseInt((headers['x-warp10-ops'] || ['0'])[0], 10),
+            fetched: parseInt((headers['x-warp10-fetched'] || ['0'])[0], 10)
           }
         });
       } catch (error) {
@@ -134,13 +154,13 @@ export class Warp10 {
     }
     return new Promise<{ result: string[], meta: { elapsed: number, ops: number, fetched: number } }>(async (resolve, reject) => {
       try {
-        const response = await got.get(`${this.url}/api/v0/fetch?${params.toString()}`, this.getOptions(undefined, readToken)) as any;
+        const {headers, body} = await this.send(this.getOptions(`/api/v0/fetch?${params.toString()}`, 'GET', readToken)) as any;
         resolve({
-          result: response.body.split('\n'),
+          result: body.split('\n'),
           meta: {
-            elapsed: parseInt((response.headers['x-warp10-elapsed'] || ['0'])[0], 10),
-            ops: parseInt((response.headers['x-warp10-ops'] || ['0'])[0], 10),
-            fetched: parseInt((response.headers['x-warp10-fetched'] || ['0'])[0], 10)
+            elapsed: parseInt((headers['x-warp10-elapsed'] || ['0'])[0], 10),
+            ops: parseInt((headers['x-warp10-ops'] || ['0'])[0], 10),
+            fetched: parseInt((headers['x-warp10-fetched'] || ['0'])[0], 10)
           }
         });
       } catch (error) {
@@ -166,12 +186,13 @@ export class Warp10 {
         return `${d.timestamp || dayjs.utc().valueOf() * 1000}/${pos}/${d.elev || ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
       }
     });
-    return new Promise<{ response: string, count: number }>(async (resolve, reject) => {
+    return new Promise<{ response: string | undefined, count: number }>(async (resolve, reject) => {
       try {
-        const response = await got.post(`${this.url}/api/v0/update`, this.getOptions(payload.join('\n'), writeToken)) as any;
-        resolve({response: response.body, count: payload.length});
+        const opts = this.getOptions(`/api/v0/update`, 'POST', writeToken);
+        const {body} = await this.send(opts, payload.join('\n')) as any;
+        resolve({response: body, count: payload.length});
       } catch (error) {
-        reject(error);
+        reject({error, payload});
       }
     });
   }
@@ -202,8 +223,8 @@ export class Warp10 {
     }
     return new Promise<{ result: string }>(async (resolve, reject) => {
       try {
-        const response = await got.get(`${this.url}/api/v0/delete?${params.toString()}`, this.getOptions(undefined, deleteToken)) as any;
-        resolve({result: response.body});
+        const {body} = await this.send(this.getOptions(`/api/v0/delete?${params.toString()}`, 'GET', deleteToken)) as any;
+        resolve({result: body});
       } catch (error) {
         reject(error);
       }
@@ -219,11 +240,15 @@ export class Warp10 {
     const payload = meta.map(m => encodeURIComponent(m.className) + this.formatLabels(m.labels) + this.formatLabels(m.attributes));
     return new Promise<{ response: string, count: number }>(async (resolve, reject) => {
       try {
-        const response = await got.post(`${this.url}/api/v0/meta`, this.getOptions(payload.join('\n'), writeToken)) as any;
-        resolve({response: response.body, count: payload.length});
+        const {body} = await this.send(this.getOptions(`/api/v0/meta`, 'POST', writeToken), payload.join('\n')) as any;
+        resolve({response: body, count: payload.length});
       } catch (error) {
         reject(error);
       }
     });
+  }
+
+  setTimeout(to: number) {
+    this.timeoutOptions = to;
   }
 }

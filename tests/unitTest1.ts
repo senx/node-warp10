@@ -17,14 +17,54 @@
 import {Warp10} from '../lib/warp10';
 import {assert, expect, should} from 'chai'; // Using Assert style // Using Expect style
 import {performance} from 'perf_hooks';
-import got from 'got';
 import {describe} from 'mocha';
+import {get} from "https";
 
 const warp10url: string = 'http://localhost:8080';
 const warp: Warp10 = new Warp10(warp10url);
 const unreachablewarp: Warp10 = new Warp10('http://donotexist.donotexist');
 
+
+async function send(url: string): Promise<any> {
+  let body: string = '';
+  return new Promise((resolve, reject) => {
+    const req: any = get(url, (res: any) => {
+      res.on("data", (chunk: any) => body += chunk);
+      res.on("error", (err: any) => reject(err));
+      res.on("end", () => {
+        try {
+          resolve(body);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    req.on("error", (err: any) => reject(err));
+    req.on('timeout', (err: any) => {
+      reject(err);
+      req.abort();
+    });
+    req.on('uncaughtException', (err: any) => {
+      req.abort();
+      reject(err);
+    });
+    req.end(() => {
+    });
+  });
+}
+
+
 describe('Starting basic tests', () => {
+  it('\'2 2 +\'', () =>
+    new Promise((resolve, reject) =>
+      warp.exec('2 2 +')
+        .then(answer => {
+          expect(answer.result[0]).to.equal(4);
+          resolve(true)
+        })
+        .catch(err => reject(err))
+    )
+  );
 
   it('\'ca%25\'', () =>
     new Promise((resolve, reject) =>
@@ -83,7 +123,7 @@ describe('Starting basic tests', () => {
 });
 
 describe('Starting timeoutTests tests', () => {
-  unreachablewarp.setTimeout(20000, 1000);
+  unreachablewarp.setTimeout(1000);
   let startTime: number = performance.now();
   it('Should fail on unreachable', () => {
     return new Promise((resolve, reject) =>
@@ -122,25 +162,29 @@ describe('Starting CRUD tests', () => {
   let deleteToken: string;
   const sandboxUrl: string = 'https://sandbox.senx.io/';
   const sb: Warp10 = new Warp10(sandboxUrl);
+
   // fetch tokens from the sandbox
   it('Should get a token', () => {
-    return new Promise((resolve, reject) =>
-      got.get(sandboxUrl + 'tokens')
-        .then(r => {
-          const result = JSON.parse(r.body);
-          readToken = result.read;
-          writeToken = result.write
-          deleteToken = result.delete;
-          should().exist(readToken)
-          should().exist(writeToken)
-          should().exist(deleteToken)
-          resolve(true)
-        })
-        .catch(() => reject('Unable to get token to do tests on sandbox!'))
-    );
+    return new Promise(async resolve => {
+      const body = await send(sandboxUrl + 'tokens');
+      const result = JSON.parse(body);
+      readToken = result.read;
+      writeToken = result.write
+      deleteToken = result.delete;
+      should().exist(readToken);
+      should().exist(writeToken);
+      should().exist(deleteToken);
+      resolve(true);
+    });
   });
 
-  it('Should push data to https://sandbox.senx.io/', () => sb.update(writeToken, updateTest));
+  it('Should push data to https://sandbox.senx.io/', () =>
+    new Promise((resolve, reject) =>
+      sb.update(writeToken, updateTest)
+        .then(() => resolve(true))
+        .catch(err => reject(err))
+    ));
+
   it('Should read via FETCH exec', () =>
     new Promise((resolve, reject) => {
       sb.exec(`[ '${readToken}' '~.*' {} NOW -10 ] FETCH SORT`)
