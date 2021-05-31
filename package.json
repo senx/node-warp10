@@ -1,6 +1,6 @@
 {
   "name": "@senx/warp10",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "private": false,
   "keywords": [
     "web",
@@ -14,6 +14,9 @@
     "Times Series"
   ],
   "description": "Warp 10 NodeJS library",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/senx/node-warp10.git"
@@ -22,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/senx/node-warp10/issues"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "prepublishOnly": "yarn test && yarn build",
     "build": "tsc",
