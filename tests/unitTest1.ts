@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 SenX S.A.S.
+ * Copyright 2020-2023 SenX S.A.S.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License');
  *  you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  *  limitations under the License.
  */
 
-import {Warp10} from '../lib/warp10';
+import {Warp10} from '../src/warp10';
 import {assert, expect, should} from 'chai'; // Using Assert style // Using Expect style
 import {performance} from 'perf_hooks';
 import {describe} from 'mocha';
 import {get} from "https";
 
 const warp10url: string = 'http://localhost:8080';
-const warp: Warp10 = new Warp10(warp10url);
+const warp: Warp10 = new Warp10(warp10url, true);
 const unreachablewarp: Warp10 = new Warp10('http://donotexist.donotexist');
 
 
@@ -92,7 +92,7 @@ describe('Starting basic tests', () => {
     new Promise((resolve, reject) =>
       warp.exec('2 2 +')
         .then(answer => {
-          expect(answer.result[0]).to.equal(4);
+          expect(answer.result[0]).eq(4);
           resolve(true)
         })
         .catch(err => reject(err))
@@ -143,6 +143,65 @@ describe('Starting timeoutTests tests', () => {
 
 });
 
+describe('Starting exec and fetch', () => {
+
+  let readToken: string;
+  let writeToken: string;
+  let deleteToken: string;
+  const sandboxUrl: string = 'https://sandbox.senx.io/';
+  const sb: Warp10 = new Warp10(sandboxUrl);
+
+  // fetch tokens from the sandbox
+  it('Should get a token', () =>
+    new Promise(async resolve => {
+      const body = await send(sandboxUrl + 'tokens');
+      const result = JSON.parse(body);
+      readToken = result.read;
+      writeToken = result.write
+      deleteToken = result.delete;
+      should().exist(readToken);
+      should().exist(writeToken);
+      should().exist(deleteToken);
+      resolve(true);
+    })
+  );
+
+  it('Should insert random data', () =>
+    new Promise((resolve, reject) =>
+      sb.exec(`NEWGTS 'test' RENAME 0 2514 <%
+   NaN NaN NaN RAND ADDVALUE
+%> FOR '${writeToken}' UPDATE`)
+        .then(() => resolve(true))
+        .catch(err => reject(err))
+    ));
+
+  it('Should fetch in fulltext mode with the first timestamp = 2514', () =>
+    new Promise((resolve, reject) => {
+      sb.fetch(readToken, 'test', {}, '1970-01-01T00:00:00.000Z', '1970-01-01T01:00:00.000Z', 'fulltext')
+        .then(r => {
+          expect(r.result.length).gte(0, 'There is no result')
+          expect(r.result[0].split('//')[0]).eq('2514', 'Wrong timestamp');
+          resolve(true);
+        })
+        .catch(err => reject(err))
+    })
+  );
+
+  it('Should fetch in json mode with the first timestamp = 2514', () =>
+    new Promise((resolve, reject) => {
+      sb.fetch(readToken, 'test', {}, '1970-01-01T00:00:00.000Z', '1970-01-01T01:00:00.000Z', 'json', true)
+        .then(r => {
+          expect(r.result.length, 'There is no result').gte(0)
+          console.log(r.result[0].v[0])
+          const firstTT = r.result[0].v[0][0];
+          expect(firstTT, 'Wrong timestamp').eq(2514);
+          resolve(true);
+        })
+        .catch(err => reject(err))
+    })
+  );
+})
+
 
 describe('Starting CRUD tests', () => {
 // the ù is something volunteer
@@ -187,7 +246,7 @@ describe('Starting CRUD tests', () => {
 
   it('Should read via FETCH exec', () =>
     new Promise((resolve, reject) => {
-      sb.exec(`[ '${readToken}' '~.*' {} NOW -10 ] FETCH SORT`)
+      sb.exec(`[ '${readToken}' '~io.warp10.*' {} NOW -10 ] FETCH SORT`)
         .then(ans => {
           expect(ans.result[0][0].c).eq('io.warp10.tùst', 'unicode problem somewhere in update or exec classname');
           expect(ans.result[0][0].l.key).eq('valùe', 'unicode problem somewhere in update or exec labels');
@@ -200,10 +259,10 @@ describe('Starting CRUD tests', () => {
 
   it('Should read via FETCH endpoint', () =>
     new Promise((resolve, reject) => {
-      sb.fetch(readToken, '~.*', {'key': 'valùe'}, '2019-11-21T12:34:43.388409Z', -2, 'text')
+      sb.fetch(readToken, '~io.warp10.*', {'key': 'valùe'}, '2019-11-21T12:34:43.388409Z', -2, 'text')
         .then(answer => {
           expect(answer.result.length).gte(2, 'fetch must be at least two lines');
-          assert((String)(answer.result[1]).startsWith('='), 'second line of text fetch must be equal')
+          assert(answer.result[1].toString().startsWith('='), 'second line of text fetch must be equal')
           resolve(true);
         }).catch(err => reject(err));
     })
@@ -212,9 +271,9 @@ describe('Starting CRUD tests', () => {
 
   it('Should delete via DELETE endpoint', () =>
     new Promise((resolve, reject) => {
-      sb.delete(deleteToken, '~.*', {}, '', '', true)
+      sb.delete(deleteToken, '~io.warp10.*', {}, '', '', true)
         .then(() => {
-          sb.exec(`[ '${readToken}' '~.*' {} NOW -10 ] FETCH SIZE`).then(ans => {
+          sb.exec(`[ '${readToken}' '~io.warp10.*' {} NOW -10 ] FETCH SIZE`).then(ans => {
             expect(ans.result[0]).eq(0, 'there must be no more value after deleteall');
             resolve(true);
           }).catch(err => reject(err));

@@ -1,8 +1,10 @@
 [![npm version](https://badge.fury.io/js/%40senx%2Fwarp10.svg)](https://badge.fury.io/js/%40senx%2Fwarp10) 
 
-# Warp&nbsp;10™ Node lib
+# Warp&nbsp;10 Node lib
 
-NodeJS library that helps to interact with Warp&nbsp;10™  
+Node.js library that helps to interact with Warp&nbsp;10.
+
+[APIDoc](./docs)
 
 ## Installation
 
@@ -15,8 +17,8 @@ Date format: UTC ISO8601 strings (YYYY-MM-DDTHH:MM:SS.SSSSSSZ)
 Available fetch formats:
 
 - text
-- fulltext (default)
-- json
+- fulltext
+- json (default)
 - tsv
 - fulltsv
 - pack
@@ -31,7 +33,7 @@ import * as moment from 'moment';
 const writeToken = 'xxxxxx';
 const deleteToken = 'xxxxxx';
 const readToken = 'xxxx';
-const w10 = new Warp10('https://warp.senx.io');
+const w10 = new Warp10('https://sandbox.senx.io');
 
 const test = async () => {
 
