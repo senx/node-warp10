@@ -6,7 +6,7 @@
 
 Node.js library that helps to interact with Warp&nbsp;10.
 
-[APIDoc](./docs)
+[APIDoc](./docs/classes/warp10.Warp10.md)
 
 ## Installation
 

@@ -47,9 +47,15 @@ Create new Warp 10 connector.
 | `endpoint` | `string` | `undefined` | Warp 10 endpoint, without <code>/api/v0</code> at the end. |
 | `debug` | `boolean` | `false` | Enable debug |
 
+**`Example`**
+
+```
+const w10 = new Warp10('https://sandbox.senx.io');
+```
+
 #### Defined in
 
-[warp10.ts:45](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L45)
+[warp10.ts:49](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L49)
 
 ## Properties
 
@@ -59,7 +65,7 @@ Create new Warp 10 connector.
 
 #### Defined in
 
-[warp10.ts:37](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L37)
+[warp10.ts:37](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L37)
 
 ___
 
@@ -69,7 +75,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:35](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L35)
+[warp10.ts:35](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L35)
 
 ___
 
@@ -79,7 +85,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:36](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L36)
+[warp10.ts:36](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L36)
 
 ___
 
@@ -89,7 +95,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:33](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L33)
+[warp10.ts:33](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L33)
 
 ___
 
@@ -99,7 +105,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:34](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L34)
+[warp10.ts:34](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L34)
 
 ___
 
@@ -109,7 +115,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:32](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L32)
+[warp10.ts:32](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L32)
 
 ## Methods
 
@@ -144,7 +150,7 @@ console.log(await w10.delete(deleteToken, '~io.warp10.test*', {key: 'value'}, ''
 
 #### Defined in
 
-[warp10.ts:251](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L251)
+[warp10.ts:255](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L255)
 
 ___
 
@@ -173,7 +179,7 @@ Execute a WarpScript against a Warp 10 instance
 
 #### Defined in
 
-[warp10.ts:135](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L135)
+[warp10.ts:139](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L139)
 
 ___
 
@@ -211,7 +217,7 @@ console.log(await w10.fetch(readToken, '~.*', {}, '2019-11-21T12:34:43.388409Z',
 
 #### Defined in
 
-[warp10.ts:167](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L167)
+[warp10.ts:171](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L171)
 
 ___
 
@@ -231,7 +237,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:95](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L95)
+[warp10.ts:99](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L99)
 
 ___
 
@@ -255,7 +261,7 @@ Build got request options from defined options
 
 #### Defined in
 
-[warp10.ts:110](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L110)
+[warp10.ts:114](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L114)
 
 ___
 
@@ -289,7 +295,7 @@ Update Meta
 
 #### Defined in
 
-[warp10.ts:287](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L287)
+[warp10.ts:291](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L291)
 
 ___
 
@@ -310,7 +316,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:55](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L55)
+[warp10.ts:59](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L59)
 
 ___
 
@@ -330,7 +336,7 @@ ___
 
 #### Defined in
 
-[warp10.ts:296](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L296)
+[warp10.ts:300](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L300)
 
 ___
 
@@ -363,7 +369,7 @@ console.log(await w10.update(writeToken, [
 
 #### Defined in
 
-[warp10.ts:212](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L212)
+[warp10.ts:216](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L216)
 
 ___
 
@@ -383,4 +389,4 @@ ___
 
 #### Defined in
 
-[warp10.ts:99](https://gitlab.com/senx/node-warp10/-/blob/b1452af/src/lib/warp10.ts#L99)
+[warp10.ts:103](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/warp10.ts#L103)
