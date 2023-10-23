@@ -41,6 +41,10 @@ export class Warp10 {
    *
    * @param endpoint - Warp 10 endpoint, without <code>/api/v0</code> at the end.
    * @param debug - Enable debug
+   * @example
+   * ```
+   * const w10 = new Warp10('https://sandbox.senx.io');
+   * ```
    */
   constructor(endpoint: string, debug = false) {
     // remove trailing slash if any
