@@ -1,10 +1,12 @@
+@senx/warp10 / [Modules](modules.md)
+
 [![npm version](https://badge.fury.io/js/%40senx%2Fwarp10.svg)](https://badge.fury.io/js/%40senx%2Fwarp10) 
 
 # Warp&nbsp;10 Node lib
 
 Node.js library that helps to interact with Warp&nbsp;10.
 
-[APIDoc](./docs/modules.md)
+[APIDoc](./docs)
 
 ## Installation
 

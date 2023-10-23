@@ -28,7 +28,7 @@
   "scripts": {
     "prepublishOnly": "yarn test && yarn build",
     "build": "tsc",
-    "typedoc": "typedoc --options typedoc.json --hideGenerator src/*/*",
+    "typedoc": "typedoc --options typedoc.json --plugin typedoc-plugin-markdown --hideGenerator src/*/*",
     "test": "mocha --require ts-node/register --ui bdd ./tests/unitTest1.ts",
     "eslint": "eslint -c .eslintrc.js --format html  -o ./out/lint/eslint.html src/**/*.ts"
   },
@@ -48,6 +48,7 @@
     "mocha": "^10.2.0",
     "ts-node": "^10.9.1",
     "typedoc": "^0.25.2",
+    "typedoc-plugin-markdown": "^3.16.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
