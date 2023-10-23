@@ -14,11 +14,11 @@
  *  limitations under the License.
  */
 
-import {Warp10} from '../src/warp10';
 import {assert, expect, should} from 'chai'; // Using Assert style // Using Expect style
 import {performance} from 'perf_hooks';
 import {describe} from 'mocha';
 import {get} from "https";
+import {Warp10} from "../src";
 
 const warp10url: string = 'http://localhost:8080';
 const warp: Warp10 = new Warp10(warp10url, true);

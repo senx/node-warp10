@@ -292,4 +292,9 @@ export class Warp10 {
     const {body} = await this.send(this.getOptions(`/api/v0/meta`, 'POST', writeToken), payload.join('\n')) as any;
     return {response: body, count: payload.length};
   }
+
+  setTimeout(to: number) {
+    this.timeoutOptions = to;
+  }
+
 }
