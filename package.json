@@ -1,6 +1,6 @@
 {
   "name": "@senx/warp10",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": false,
   "keywords": [
     "web",
@@ -30,6 +30,7 @@
     "doc": "typedoc --options typedoc.json --plugin typedoc-plugin-markdown --hideGenerator src/*/*",
     "lint": "eslint -c .eslintrc.js --format html  -o ./out/lint/eslint.html src/**/*.ts",
     "cl": "node changelog.js > CHANGELOG.md",
+    "clean": "rm -fr ./out && rm -fr ./dist",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "nyc mocha"
   },
