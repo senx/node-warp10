@@ -1,6 +1,20 @@
 Warp 10 js lib
 ---
 
+## v2.0.0
+
+> +  2023/10/24  | v2.0.1 
+> +  2023/10/24  | Update package 
+> +  2023/10/24  | Update doc and changelog 
+> +  2023/10/24  | Update unit tests 
+> +  2023/10/24  | Add a pseudo builder implementation 
+> +  2023/10/24  | Unit tests refactoring 
+> +  2023/10/24  | Unit tests refactoring 
+> +  2023/10/24  | Update logger 
+> +  2023/10/24  | Unit tests refactoring 
+> +  2023/10/24  | Fix update and provide a formatted output 
+> +  2023/10/23  | Bump minimatch from 3.0.4 to 3.1.2 
+
 ## v1.1.4
 
 > +  2023/10/23  | v1.1.4 
