@@ -20,38 +20,42 @@ export class Logger {
 
   className: string;
   isDebug = false;
+  silent = false;
 
-  constructor(className: any, isDebug = false) {
+  constructor(className: any, isDebug = false, silent = false) {
     this.className = className.name;
     this.isDebug = isDebug;
+    this.silent = silent;
   }
 
   log(level: LEVEL, methods: any[], args: any[]) {
-    let logChain = [];
-    logChain.push(`[${new Date().toISOString()} - [${this.className}] ${methods.join(' - ')}`);
-    logChain = logChain.concat(args);
-    switch (level) {
-      case LEVEL.DEBUG: {
-        if (this.isDebug) {
-          console.debug(...logChain);
+    if (!this.silent) {
+      let logChain = [];
+      logChain.push(`[${new Date().toISOString()} - [${this.className}] ${methods.join(' - ')}`);
+      logChain = logChain.concat(args);
+      switch (level) {
+        case LEVEL.DEBUG: {
+          if (this.isDebug) {
+            console.debug(...logChain);
+          }
+          break;
         }
-        break;
-      }
-      case LEVEL.ERROR: {
-        console.error(...logChain);
-        break;
-      }
-      case LEVEL.INFO: {
-        console.log(...logChain);
-        break;
-      }
-      case LEVEL.WARN: {
-        console.warn(...logChain);
-        break;
-      }
-      default: {
-        if (this.isDebug) {
+        case LEVEL.ERROR: {
+          console.error(...logChain);
+          break;
+        }
+        case LEVEL.INFO: {
           console.log(...logChain);
+          break;
+        }
+        case LEVEL.WARN: {
+          console.warn(...logChain);
+          break;
+        }
+        default: {
+          if (this.isDebug) {
+            console.log(...logChain);
+          }
         }
       }
     }
