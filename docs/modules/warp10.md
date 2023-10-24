@@ -4,6 +4,10 @@
 
 ## Table of contents
 
+### Enumerations
+
+- [TimeUnits](../enums/warp10.TimeUnits.md)
+
 ### Classes
 
 - [Warp10](../classes/warp10.Warp10.md)

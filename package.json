@@ -27,15 +27,19 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "typedoc": "typedoc --options typedoc.json --plugin typedoc-plugin-markdown --hideGenerator src/*/*",
+    "doc": "typedoc --options typedoc.json --plugin typedoc-plugin-markdown --hideGenerator src/*/*",
     "eslint": "eslint -c .eslintrc.js --format html  -o ./out/lint/eslint.html src/**/*.ts",
+    "cl": "node changelog.js > CHANGELOG.md",
     "test": "nyc mocha"
   },
   "mocha": {
     "ui": "mocha-typescript",
     "slow": "2000",
     "spec": "tests/**/*.tests.ts",
-    "require": [ "source-map-support/register", "ts-node/register" ],
+    "require": [
+      "source-map-support/register",
+      "ts-node/register"
+    ],
     "sort": false
   },
   "nyc": {
@@ -71,6 +75,7 @@
     "mocha": "^10.2.0",
     "mocha-typescript": "^1.1.17",
     "nyc": "^15.1.0",
+    "semver-sort": "^1.0.0",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.1",
     "typedoc": "^0.25.2",
