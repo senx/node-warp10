@@ -28,8 +28,26 @@
   "scripts": {
     "build": "tsc",
     "typedoc": "typedoc --options typedoc.json --plugin typedoc-plugin-markdown --hideGenerator src/*/*",
-    "test": "mocha --require ts-node/register --ui bdd ./tests/unitTest1.ts",
-    "eslint": "eslint -c .eslintrc.js --format html  -o ./out/lint/eslint.html src/**/*.ts"
+    "test": "mocha --require ts-node/register --ui mocha-typescript ./tests/unitTest1.ts",
+    "eslint": "eslint -c .eslintrc.js --format html  -o ./out/lint/eslint.html src/**/*.ts",
+    "t": "nyc mocha --require source-map-support/register --require ts-node/register --ui bdd tests/**/*.tests.ts"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "include": [
+      "src/**/*"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true,
+    "report-dir": "./out/coverage"
   },
   "homepage": "https://www.warp10.io",
   "author": "SenX <contact@senx.io>",
@@ -38,13 +56,16 @@
     "@microsoft/tsdoc-config": "^0.16.2",
     "@types/chai": "^4.3.9",
     "@types/mocha": "^10.0.3",
-    "@types/node": "^20.8.7",
+    "@types/node": "^20.8.8",
     "@typescript-eslint/eslint-plugin": "^6.8.0",
     "@typescript-eslint/parser": "^6.8.0",
     "chai": "^4.3.10",
     "eslint": "^8.52.0",
     "eslint-plugin-tsdoc": "^0.2.17",
     "mocha": "^10.2.0",
+    "mocha-typescript": "^1.1.17",
+    "nyc": "^15.1.0",
+    "source-map-support": "^0.5.21",
     "ts-node": "^10.9.1",
     "typedoc": "^0.25.2",
     "typedoc-plugin-markdown": "^3.16.0",
