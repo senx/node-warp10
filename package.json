@@ -28,9 +28,15 @@
   "scripts": {
     "build": "tsc",
     "typedoc": "typedoc --options typedoc.json --plugin typedoc-plugin-markdown --hideGenerator src/*/*",
-    "test": "mocha --require ts-node/register --ui mocha-typescript ./tests/unitTest1.ts",
     "eslint": "eslint -c .eslintrc.js --format html  -o ./out/lint/eslint.html src/**/*.ts",
-    "t": "nyc mocha --require source-map-support/register --require ts-node/register --ui bdd tests/**/*.tests.ts"
+    "test": "nyc mocha"
+  },
+  "mocha": {
+    "ui": "mocha-typescript",
+    "slow": "2000",
+    "spec": "tests/**/*.tests.ts",
+    "require": [ "source-map-support/register", "ts-node/register" ],
+    "sort": false
   },
   "nyc": {
     "extension": [
