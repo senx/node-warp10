@@ -19,8 +19,8 @@ import {get} from "https";
 
 export class AbstractTests {
 
-  protected sandboxUrl: string = 'https://sandbox.senx.io/';
-  protected warp: Warp10 = new Warp10(this.sandboxUrl, false, true);
+  protected sandboxUrl = 'https://sandbox.senx.io/';
+  protected warp: Warp10 = new Warp10().endpoint(this.sandboxUrl).silent(true);
 
   protected async send(url: string): Promise<any> {
     let body: string = '';

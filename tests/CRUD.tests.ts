@@ -91,7 +91,6 @@ export class CRUDTests extends AbstractTests {
     const strGTS = answer.result.filter(gts => gts.name === 'io.warp10.test.string')[0];
     const boolGTS = answer.result.filter(gts => gts.name === 'io.warp10.test.boolean')[0];
 
-
     expect(strGTS.data[0].ts, 'Wrong timestamp for io.warp10.test.string').eq(0);
     expect(strGTS.data[0].value, 'Wrong value for io.warp10.test.string').eq('aaa');
     should().exist(strGTS.data[0].loc, 'Wrong location for io.warp10.test.string');

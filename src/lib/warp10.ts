@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 SenX S.A.S.
+ * Copyright 2020-2023 SenX S.A.S.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,44 +22,102 @@ import https, {RequestOptions as httpsRequestOpts} from "https";
 import http, {RequestOptions as httpRequestOpts} from "http";
 import {Logger} from "./logger";
 
-dayjs.extend(utc)
+dayjs.extend(utc);
+
+export enum TimeUnits {
+  US = 1000, MS = 1, NS = 1000000
+}
 
 /**
  *
  */
 export class Warp10 {
 
-  private url: string;
-  private options: any = {};
-  private timeoutOptions = 0;
+  private url: string | undefined;
   private client: any;
-  private endpoint: URL;
   private LOG: Logger;
+  private _endpoint: URL | undefined;
+  private _timeUnit: TimeUnits | undefined;
+  private _headers?: { [key: string]: string } = {};
+  private _timeout = 0;
 
   /**
    * Create new Warp 10 connector.
    *
-   * @param endpoint - Warp 10 endpoint, without <code>/api/v0</code> at the end.
-   * @param debug - Enable debug
-   * @param silent - Do not produce logs
+   * @param params - \{ endpoint: string; debug?: boolean; silent?: boolean, timeUnit: TimeUnits \}
+   * endpoint - Warp 10 endpoint, without <code>/api/v0</code> at the end.
+   * debug - Enable debug
+   * silent - Do not produce logs
+   * timeUnit - Platform timeUnit @see TimeUnits
+   * headers - custom HTTP headers
+   * timeout - http Timeout
+   *
    * @example
    * ```
-   * const w10 = new Warp10('https://sandbox.senx.io');
+   * // standard constructor
+   * const w10 = new Warp10({endpoint: 'https://sandbox.senx.io'});
+   * // builder pattern
+   * const w10 = new Warp10().endpoint('https://sandbox.senx.io').timeUnit(TimeUnits.US);
    * ```
    */
-  constructor(endpoint: string, debug = false, silent = false) {
-    this.LOG = new Logger(Warp10, debug, silent);
+  constructor(params?: {
+    endpoint?: string;
+    debug?: boolean;
+    silent?: boolean,
+    timeUnit?: TimeUnits,
+    headers?: { [key: string]: string },
+    timeout?: number
+  }) {
+    this.LOG = new Logger(Warp10, params?.debug, params?.silent);
+    if(params?.endpoint != null) this.endpoint(params.endpoint);
+    this.timeUnit(params?.timeUnit ?? TimeUnits.US);
+    this.headers(params?.headers ?? {});
+    if (params?.timeout != null) {
+      this.timeout(params?.timeout);
+    }
+    this.LOG.debug(['constructor'], params);
+  }
+
+  endpoint(endpoint: string | undefined) {
+    if (endpoint == null) throw new Error('Endpoint is mandatory');
     // remove trailing slash if any
-    this.url = endpoint.replace(/\/+$/, '');
-    this.options.headers = {'Content-Type': 'text/plain; charset=UTF-8', 'X-Warp10-Token': ''};
+    this.url = (endpoint ?? '').replace(/\/+$/, '');
     this.client = this.url.startsWith('https') ? https : http;
-    this.endpoint = new URL(endpoint);
-    this.LOG.debug(['constructor'], {endpoint, debug, silent});
+    this._endpoint = new URL(endpoint ?? '');
+    return this;
+  }
+
+  headers(headers: { [key: string]: string }) {
+    this._headers = headers ?? {};
+    return this;
+  }
+
+  debug(debug: boolean) {
+    this.LOG.isDebug = debug;
+    return this;
+  }
+
+  silent(silent: boolean) {
+    this.LOG.silent = silent;
+    return this;
+  }
+
+  timeUnit(timeUnit: TimeUnits) {
+    this._timeUnit = timeUnit ?? TimeUnits.US;
+    return this;
+  }
+
+  timeout(to: number) {
+    if (to) {
+      this._timeout = to;
+    }
+    return this;
   }
 
   private async send(options: httpsRequestOpts | httpRequestOpts, data?: any): Promise<any> {
     this.LOG.debug(['send'], {options, data});
     let body: string = '';
+    if(!this.client) throw new Error('Warp10Lib is misconfigured, probably a wrong ort missing endpoint value.');
     return new Promise((resolve, reject) => {
       const req: any = this.client.request(options, (res: any) => {
         res.on("data", (chunk: any) => body += chunk);
@@ -78,7 +136,7 @@ export class Warp10 {
         reject(err);
       });
       req.on('timeout', (err: any) => {
-        this.LOG.error(['send', 'timeout'], err);
+        this.LOG.warn(['send', 'timeout'], err);
         req.abort();
         reject(err);
       });
@@ -90,19 +148,10 @@ export class Warp10 {
       if (data) {
         req.write(data);
       }
-      // end the request to prevent ECONNRESET and socket hung errors
       req.end(() => {
+        // end the request to prevent ECONNRESET and socket hung errors
       });
     });
-  }
-
-
-  private formatLabels(labels: any) {
-    return `{${Object.keys(labels).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
-  }
-
-  private static formatValues(value: number | string | boolean) {
-    return (typeof value === 'string') ? `'${encodeURIComponent(value)}'` : value;
   }
 
   /**
@@ -113,17 +162,21 @@ export class Warp10 {
    * @param warpToken - the X-Warp10-Token, if any
    */
   private getOptions(path: string, method: string = 'GET', warpToken?: string): any {
-    return {
-      hostname: this.endpoint.hostname,
-      port: this.endpoint.port,
+    if (!this._endpoint) throw new Error('Missing endpoint');
+    const opts = {
+      hostname: this._endpoint.hostname,
+      port: this._endpoint.port,
       path,
       method,
-      bodyTimeout: this.timeoutOptions,
       headers: {
         'Content-Type': 'text/plain; charset=UTF-8',
-        'X-Warp10-Token': warpToken || ''
+        'X-Warp10-Token': warpToken || '',
+        ...this._headers
       }
-    }
+    } as any;
+    if (this._timeout > 0) opts.bodyTimeout = this._timeout;
+    return opts;
+
   }
 
   /**
@@ -142,9 +195,9 @@ export class Warp10 {
     return {
       result: JSON.parse(body),
       meta: {
-        elapsed: parseInt((headers['x-warp10-elapsed'] || ['0'])[0], 10),
-        ops: parseInt((headers['x-warp10-ops'] || ['0'])[0], 10),
-        fetched: parseInt((headers['x-warp10-fetched'] || ['0'])[0], 10)
+        elapsed: parseInt((headers['x-warp10-elapsed'] ?? ['0'])[0], 10),
+        ops: parseInt((headers['x-warp10-ops'] ?? ['0'])[0], 10),
+        fetched: parseInt((headers['x-warp10-fetched'] ?? ['0'])[0], 10)
       }
     }
   }
@@ -203,9 +256,9 @@ export class Warp10 {
     return {
       result,
       meta: {
-        elapsed: parseInt((headers['x-warp10-elapsed'] || ['0'])[0], 10),
-        ops: parseInt((headers['x-warp10-ops'] || ['0'])[0], 10),
-        fetched: parseInt((headers['x-warp10-fetched'] || ['0'])[0], 10)
+        elapsed: parseInt((headers['x-warp10-elapsed'] ?? ['0'])[0], 10),
+        ops: parseInt((headers['x-warp10-ops'] ?? ['0'])[0], 10),
+        fetched: parseInt((headers['x-warp10-fetched'] ?? ['0'])[0], 10)
       }
     };
   }
@@ -234,10 +287,10 @@ export class Warp10 {
       if (typeof d === 'string') {
         return d;
       } else {
-        if (d.lat != null  && d.lng != null) {
+        if (d.lat != null && d.lng != null) {
           pos = `${d.lat}:${d.lng}`;
         }
-        return `${d.timestamp ?? dayjs.utc().valueOf() * 1000}/${pos}/${d.elev ?? ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
+        return `${d.timestamp ?? dayjs.utc().valueOf() * (this._timeUnit ?? TimeUnits.US).valueOf()}/${pos}/${d.elev ?? ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
       }
     });
     const opts = this.getOptions(`/api/v0/update`, 'POST', writeToken);
@@ -309,8 +362,12 @@ export class Warp10 {
     return {response: body, count: payload.length};
   }
 
-  setTimeout(to: number) {
-    this.timeoutOptions = to;
+  private formatLabels(labels: any) {
+    return `{${Object.keys(labels).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
+  }
+
+  private static formatValues(value: number | string | boolean) {
+    return (typeof value === 'string') ? `'${encodeURIComponent(value)}'` : value;
   }
 
   private formatGTS(gtsList: any[]) {

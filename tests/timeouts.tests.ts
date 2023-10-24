@@ -23,11 +23,11 @@ import {Warp10} from "../src";
 @suite('TimeoutTests tests')
 export class TimeoutsTests extends AbstractTests {
   private startTime: number = 0;
-  private unreachableInstance: Warp10 = new Warp10('http://donotexist.donotexist', false, true);
+  private unreachableInstance: Warp10 = new Warp10({endpoint: 'http://donotexist.donotexist', silent: true, timeout: 10000});
 
   // noinspection JSUnusedGlobalSymbols
   before() {
-    this.unreachableInstance.setTimeout(1000);
+    this.unreachableInstance.timeout(1000);
     this.startTime = performance.now();
   }
 

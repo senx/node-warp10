@@ -38,7 +38,7 @@
 
 #### Defined in
 
-[logger.ts:24](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L24)
+[logger.ts:24](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L24)
 
 ## Properties
 
@@ -48,7 +48,7 @@
 
 #### Defined in
 
-[logger.ts:21](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L21)
+[logger.ts:21](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L21)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[logger.ts:22](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L22)
+[logger.ts:22](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L22)
 
 ## Methods
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[logger.ts:60](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L60)
+[logger.ts:60](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L60)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[logger.ts:64](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L64)
+[logger.ts:64](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L64)
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-[logger.ts:72](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L72)
+[logger.ts:72](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L72)
 
 ___
 
@@ -143,7 +143,7 @@ ___
 
 #### Defined in
 
-[logger.ts:29](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L29)
+[logger.ts:29](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L29)
 
 ___
 
@@ -164,4 +164,4 @@ ___
 
 #### Defined in
 
-[logger.ts:68](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/logger.ts#L68)
+[logger.ts:68](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/logger.ts#L68)

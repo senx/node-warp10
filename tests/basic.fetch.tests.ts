@@ -19,7 +19,7 @@ import {suite, test} from "mocha-typescript";
 import {expect, should} from "chai";
 
 @suite('Exec & Fetch tests')
-export class ExecFetchTests extends AbstractTests {
+export class BasicFetchTests extends AbstractTests {
   private readToken: string = '';
   private writeToken: string = '';
   private deleteToken: string = '';

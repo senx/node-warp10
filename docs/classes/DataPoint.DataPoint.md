@@ -34,7 +34,7 @@
 
 #### Defined in
 
-[DataPoint.ts:22](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L22)
+[DataPoint.ts:22](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L22)
 
 ___
 
@@ -44,7 +44,7 @@ ___
 
 #### Defined in
 
-[DataPoint.ts:21](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L21)
+[DataPoint.ts:21](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L21)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[DataPoint.ts:24](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L24)
+[DataPoint.ts:24](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L24)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[DataPoint.ts:19](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L19)
+[DataPoint.ts:19](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L19)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[DataPoint.ts:20](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L20)
+[DataPoint.ts:20](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L20)
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 #### Defined in
 
-[DataPoint.ts:18](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L18)
+[DataPoint.ts:18](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L18)
 
 ___
 
@@ -98,4 +98,4 @@ ___
 
 #### Defined in
 
-[DataPoint.ts:23](https://gitlab.com/senx/node-warp10/-/blob/28e1413/src/lib/DataPoint.ts#L23)
+[DataPoint.ts:23](https://gitlab.com/senx/node-warp10/-/blob/0dd4818/src/lib/DataPoint.ts#L23)
