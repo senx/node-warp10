@@ -41,19 +41,20 @@ export class Warp10 {
    *
    * @param endpoint - Warp 10 endpoint, without <code>/api/v0</code> at the end.
    * @param debug - Enable debug
+   * @param silent - Do not produce logs
    * @example
    * ```
    * const w10 = new Warp10('https://sandbox.senx.io');
    * ```
    */
-  constructor(endpoint: string, debug = false) {
+  constructor(endpoint: string, debug = false, silent = false) {
+    this.LOG = new Logger(Warp10, debug, silent);
     // remove trailing slash if any
     this.url = endpoint.replace(/\/+$/, '');
     this.options.headers = {'Content-Type': 'text/plain; charset=UTF-8', 'X-Warp10-Token': ''};
     this.client = this.url.startsWith('https') ? https : http;
     this.endpoint = new URL(endpoint);
-    this.LOG = new Logger(Warp10, debug);
-    this.LOG.debug(['constructor'], {endpoint, debug});
+    this.LOG.debug(['constructor'], {endpoint, debug, silent});
   }
 
   private async send(options: httpsRequestOpts | httpRequestOpts, data?: any): Promise<any> {
@@ -154,9 +155,9 @@ export class Warp10 {
    * @param readToken - Read token
    * @param className - ClassName, could be a regexp starting with '\~' (ie: '~io.warp10.*' )
    * @param labels - Labels key value map. Could be a regexp starting with '\~' (ie: \{ 'myLabel': '~sensor_.*' \} )
-   * @param start - ISO8601 UTC Date or UTC timstamp (in platform timeunit format)
+   * @param start - ISO8601 UTC Date
    * @param stop - ISO8601 UTC Date if 'start' is a ISO8601 date. Timespan (in platform timeunit format) if 'start' is a timestamp
-   * @param format - Output format: text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw', default is 'json'
+   * @param format - Output format: text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' | 'formatted', default is 'formatted'
    * @param dedup - Deduplicates data (default is true)
    *
    * @example
@@ -168,13 +169,13 @@ export class Warp10 {
    * console.log(await w10.fetch(readToken, '~.*', {}, '2019-11-21T12:34:43.388409Z', 86400000000 * 5));
    * ```
    */
-  async fetch(readToken: string, className: string, labels: object, start: string, stop: any, format: 'text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' = 'json', dedup = true): Promise<{
+  async fetch(readToken: string, className: string, labels: object, start: string, stop: any, format: 'text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' | 'formatted' = 'formatted', dedup = true): Promise<{
     result: any[],
     meta: { elapsed: number, ops: number, fetched: number }
   }> {
     const params = new URLSearchParams([]);
     params.set('selector', encodeURIComponent(className) + this.formatLabels(labels));
-    params.set('format', format);
+    params.set('format', format === 'formatted' ? 'json' : format);
     params.set('dedup', '' + dedup);
     if (typeof stop === 'string') {
       params.set('start', start);
@@ -188,8 +189,19 @@ export class Warp10 {
       headers,
       body
     } = await this.send(this.getOptions(`/api/v0/fetch?${params.toString()}`, 'GET', readToken)) as any;
+    let result: any;
+    switch (format) {
+      case "json":
+        result = JSON.parse(body);
+        break;
+      case "formatted":
+        result = this.formatGTS(JSON.parse(body) ?? []);
+        break;
+      default:
+        result = body.split('\n');
+    }
     return {
-      result: format === 'json' ? JSON.parse(body) : body.split('\n'),
+      result,
       meta: {
         elapsed: parseInt((headers['x-warp10-elapsed'] || ['0'])[0], 10),
         ops: parseInt((headers['x-warp10-ops'] || ['0'])[0], 10),
@@ -222,10 +234,10 @@ export class Warp10 {
       if (typeof d === 'string') {
         return d;
       } else {
-        if (d.lat && d.lng) {
+        if (d.lat != null  && d.lng != null) {
           pos = `${d.lat}:${d.lng}`;
         }
-        return `${d.timestamp || dayjs.utc().valueOf() * 1000}/${pos}/${d.elev || ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
+        return `${d.timestamp ?? dayjs.utc().valueOf() * 1000}/${pos}/${d.elev ?? ''} ${d.className}${this.formatLabels(d.labels)} ${Warp10.formatValues(d.value)}`;
       }
     });
     const opts = this.getOptions(`/api/v0/update`, 'POST', writeToken);
@@ -301,4 +313,25 @@ export class Warp10 {
     this.timeoutOptions = to;
   }
 
+  private formatGTS(gtsList: any[]) {
+    const res = [];
+    const size = (gtsList ?? []).length;
+    for (let i = 0; i < size; i++) {
+      const gts = gtsList[i];
+      const data: any[] = [];
+      const vSize = gts.v.length;
+      for (let j = 0; j < vSize; j++) {
+        data.push({
+          ts: gts.v[j][0],
+          loc: gts.v[j].length > 3 ? {
+            lat: gts.v[j][1], long: gts.v[j][2]
+          } : undefined,
+          elev: gts.v[j].length > 4 ? gts.v[j][3] : undefined,
+          value: gts.v[j][gts.v[j].length - 1]
+        });
+      }
+      res.push({name: gts.c, labels: gts.l, attributes: gts.a, data});
+    }
+    return res;
+  }
 }
