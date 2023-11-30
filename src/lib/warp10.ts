@@ -28,6 +28,8 @@ export enum TimeUnits {
   US = 1000, MS = 1, NS = 1000000
 }
 
+export interface GTS {c: string, v: any[], a:  {[key: string]: string}, l:  {[key: string]: string}, la: number}
+
 /**
  *
  */
@@ -222,7 +224,7 @@ export class Warp10 {
    * console.log(await w10.fetch(readToken, '~.*', {}, '2019-11-21T12:34:43.388409Z', 86400000000 * 5));
    * ```
    */
-  async fetch(readToken: string, className: string, labels: object, start: string, stop: any, format: 'text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' | 'formatted' = 'formatted', dedup = true): Promise<{
+  async fetch(readToken: string, className: string, labels:  {[key: string]: string}, start: string, stop: any, format: 'text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' | 'formatted' = 'formatted', dedup = true): Promise<{
     result: any[],
     meta: { elapsed: number, ops: number, fetched: number }
   }> {
@@ -267,7 +269,7 @@ export class Warp10 {
    * Update datapoints
    *
    * @param writeToken - Write token
-   * @param datapoints - Datapoints to update
+   * @param dataPoints
    *
    * @example
    * ```
@@ -278,11 +280,11 @@ export class Warp10 {
    *  ]));
    * ```
    */
-  async update(writeToken: string, datapoints: (DataPoint | string)[]): Promise<{
+  async update(writeToken: string, dataPoints: (DataPoint | string)[]): Promise<{
     response: string | undefined,
     count: number
   }> {
-    const payload = datapoints.map(d => {
+    const payload = dataPoints.map(d => {
       let pos = '';
       if (typeof d === 'string') {
         return d;
@@ -317,7 +319,7 @@ export class Warp10 {
    * ```
    *
    */
-  async delete(deleteToken: string, className: string, labels: object, start: string, end: string, deleteAll = false): Promise<{
+  async delete(deleteToken: string, className: string, labels:  {[key: string]: string}, start: string, end: string, deleteAll = false): Promise<{
     result: string
   }> {
     const params = new URLSearchParams([]);
@@ -353,7 +355,7 @@ export class Warp10 {
    *   }]));
    * ```
    */
-  async meta(writeToken: string, meta: { className: string, labels: object, attributes: object }[]): Promise<{
+  async meta(writeToken: string, meta: { className: string, labels:  {[key: string]: string}, attributes:  {[key: string]: string} }[]): Promise<{
     response: string,
     count: number
   }> {
@@ -362,15 +364,15 @@ export class Warp10 {
     return {response: body, count: payload.length};
   }
 
-  private formatLabels(labels: any) {
-    return `{${Object.keys(labels).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
+  private formatLabels(labels: {[key: string]: string}) {
+    return `{${Object.keys(labels?? {}).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
   }
 
   private static formatValues(value: number | string | boolean) {
     return (typeof value === 'string') ? `'${encodeURIComponent(value)}'` : value;
   }
 
-  private formatGTS(gtsList: any[]) {
+  private formatGTS(gtsList: GTS[]) {
     const res = [];
     const size = (gtsList ?? []).length;
     for (let i = 0; i < size; i++) {
