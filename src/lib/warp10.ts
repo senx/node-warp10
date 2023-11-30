@@ -28,7 +28,27 @@ export enum TimeUnits {
   US = 1000, MS = 1, NS = 1000000
 }
 
-export interface GTS {c: string, v: any[], a:  {[key: string]: string}, l:  {[key: string]: string}, la: number}
+export interface GTS {
+  c: string,
+  v: any[],
+  a: { [key: string]: string },
+  l: { [key: string]: string },
+  la: number
+}
+
+export interface W10Data {
+  ts: number,
+  value: any,
+  loc?: { lat: number, long: number },
+  elev?: number
+}
+
+export interface FormattedGTS {
+  name: string,
+  labels: { [key: string]: string },
+  attributes: { [key: string]: string },
+  data: W10Data[]
+}
 
 /**
  *
@@ -71,7 +91,7 @@ export class Warp10 {
     timeout?: number
   }) {
     this.LOG = new Logger(Warp10, params?.debug, params?.silent);
-    if(params?.endpoint != null) this.endpoint(params.endpoint);
+    if (params?.endpoint != null) this.endpoint(params.endpoint);
     this.timeUnit(params?.timeUnit ?? TimeUnits.US);
     this.headers(params?.headers ?? {});
     if (params?.timeout != null) {
@@ -119,7 +139,7 @@ export class Warp10 {
   private async send(options: httpsRequestOpts | httpRequestOpts, data?: any): Promise<any> {
     this.LOG.debug(['send'], {options, data});
     let body: string = '';
-    if(!this.client) throw new Error('Warp10Lib is misconfigured, probably a wrong ort missing endpoint value.');
+    if (!this.client) throw new Error('Warp10Lib is misconfigured, probably a wrong ort missing endpoint value.');
     return new Promise((resolve, reject) => {
       const req: any = this.client.request(options, (res: any) => {
         res.on("data", (chunk: any) => body += chunk);
@@ -224,7 +244,9 @@ export class Warp10 {
    * console.log(await w10.fetch(readToken, '~.*', {}, '2019-11-21T12:34:43.388409Z', 86400000000 * 5));
    * ```
    */
-  async fetch(readToken: string, className: string, labels:  {[key: string]: string}, start: string, stop: any, format: 'text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' | 'formatted' = 'formatted', dedup = true): Promise<{
+  async fetch(readToken: string, className: string, labels: {
+    [key: string]: string
+  }, start: string, stop: any, format: 'text' | 'fulltext' | 'json' | 'tsv' | 'fulltsv' | 'pack' | 'raw' | 'formatted' = 'formatted', dedup = true): Promise<{
     result: any[],
     meta: { elapsed: number, ops: number, fetched: number }
   }> {
@@ -319,7 +341,9 @@ export class Warp10 {
    * ```
    *
    */
-  async delete(deleteToken: string, className: string, labels:  {[key: string]: string}, start: string, end: string, deleteAll = false): Promise<{
+  async delete(deleteToken: string, className: string, labels: {
+    [key: string]: string
+  }, start: string, end: string, deleteAll = false): Promise<{
     result: string
   }> {
     const params = new URLSearchParams([]);
@@ -355,7 +379,11 @@ export class Warp10 {
    *   }]));
    * ```
    */
-  async meta(writeToken: string, meta: { className: string, labels:  {[key: string]: string}, attributes:  {[key: string]: string} }[]): Promise<{
+  async meta(writeToken: string, meta: {
+    className: string,
+    labels: { [key: string]: string },
+    attributes: { [key: string]: string }
+  }[]): Promise<{
     response: string,
     count: number
   }> {
@@ -364,30 +392,36 @@ export class Warp10 {
     return {response: body, count: payload.length};
   }
 
-  private formatLabels(labels: {[key: string]: string}) {
-    return `{${Object.keys(labels?? {}).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
+  private formatLabels(labels: { [key: string]: string }) {
+    return `{${Object.keys(labels ?? {}).map(k => `${k}=${encodeURIComponent(`${labels[k]}`)}`)}}`
   }
 
   private static formatValues(value: number | string | boolean) {
     return (typeof value === 'string') ? `'${encodeURIComponent(value)}'` : value;
   }
 
-  private formatGTS(gtsList: GTS[]) {
-    const res = [];
+  private formatGTS(gtsList: GTS[]): FormattedGTS[] {
+    const res: FormattedGTS[] = [];
     const size = (gtsList ?? []).length;
     for (let i = 0; i < size; i++) {
       const gts = gtsList[i];
-      const data: any[] = [];
+      const data: W10Data[] = [];
       const vSize = gts.v.length;
       for (let j = 0; j < vSize; j++) {
-        data.push({
+        const dp: W10Data = {
           ts: gts.v[j][0],
-          loc: gts.v[j].length > 3 ? {
-            lat: gts.v[j][1], long: gts.v[j][2]
-          } : undefined,
-          elev: gts.v[j].length > 4 ? gts.v[j][3] : undefined,
           value: gts.v[j][gts.v[j].length - 1]
-        });
+        };
+        if (gts.v[j].length > 3) {
+          dp.loc = {
+            lat: gts.v[j][1],
+            long: gts.v[j][2]
+          };
+        }
+        if (gts.v[j].length > 4) {
+          dp.elev = gts.v[j][3];
+        }
+        data.push(dp);
       }
       res.push({name: gts.c, labels: gts.l, attributes: gts.a, data});
     }

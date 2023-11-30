@@ -13,5 +13,5 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-export {Warp10, TimeUnits, GTS} from './lib/warp10';
+export {Warp10, TimeUnits, GTS, W10Data, FormattedGTS} from './lib/warp10';
 export {DataPoint} from './lib/DataPoint';
